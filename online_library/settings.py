@@ -40,9 +40,13 @@ INSTALLED_APPS = [
     'book',
     'crispy_forms',
     'crispy_bootstrap5',
+    'ckeditor',
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5'
+
+# Define the public URL for media files
+MEDIA_URL = '/media/'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
