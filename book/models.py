@@ -13,21 +13,13 @@ class Category(models.Model):
     def __str__(self):
         return self.name
     
-class Tag(models.Model):
-    name = models.CharField(max_length=100)
 
-    def __str__(self):
-        return self.name
-    
 class Book(models.Model):
     title = models.CharField(max_length=100)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.CharField(max_length=30)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     cover_image = models.ImageField(upload_to='book_covers/', blank=True, null=True)
     description = RichTextField()
-    
-    # Tags needed to connect
-    tag = models.ManyToManyField(Tag, related_name='book')
 
     ratings = models.ManyToManyField(User, through='Rating', related_name='rated_books')
 

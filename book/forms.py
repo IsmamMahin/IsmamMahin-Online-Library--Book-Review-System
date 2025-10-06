@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class BookForm(forms.ModelForm):
     class Meta:
         model = Book
-        fields = ['title', 'description', 'cover_image', 'category', 'tag']
+        fields = ['title', 'description', 'cover_image', 'category']
 
 class CommentForm(forms.ModelForm):
     class Meta:

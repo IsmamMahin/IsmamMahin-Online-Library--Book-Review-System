@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Book, Comment, Category, Tag, Rating
+from .models import Book, Comment, Category, Rating
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -10,25 +10,21 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 # Create your views here.
 # Book list 
-# category, tag, search 
+# category, search 
 
 def book_list(request):
     categoryQ = request.GET.get('category') # python
-    tagQ = request.GET.get('tag')
     searchQ = request.GET.get('q')
     
     books = Book.objects.all() # all book ke anlam
     
     if categoryQ:
         books = books.filter(category__name = categoryQ)
-    if tagQ:
-        books = books.filter(tag__name = tagQ)
     if searchQ:
         books = books.filter(
             Q(title__icontains = searchQ) |
             Q(description__icontains = searchQ) | 
-            Q(category__name__icontains = searchQ) | 
-            Q(tag__name__icontains = searchQ) 
+            Q(category__name__icontains = searchQ) 
         ).distinct()
     
     paginator = Paginator(books, 2) # per page a 2 ta kore book dekhabe
@@ -39,10 +35,8 @@ def book_list(request):
     context = {
         'page_obj' : page_obj,
         'categories' : Category.objects.all(),
-        'tags' : Tag.objects.all(),
         'search_query' : searchQ,
         'category_query' : categoryQ,
-        'tag_query' : tagQ,
     }
     return render(request, 'blog/book_list.html', context)
 
@@ -105,7 +99,6 @@ def book_details(request, id):
     context = {
         'book' : book,
         'categories' : Category.objects.all(),
-        'tag' : Tag.objects.all(),
         'comments' : comments,
         'is_liked' : is_liked,
         'like_count' : like_count,
