@@ -1,0 +1,7 @@
+{% load crispy_forms_tags %}
+<h4 class="mb-3">👤 Update Your Profile</h4>
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-success">Update</button>
+</form>

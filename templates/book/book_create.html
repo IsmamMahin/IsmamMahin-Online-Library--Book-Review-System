@@ -1,0 +1,29 @@
+{% extends "blog/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Create Book{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Enter new Book Info</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" >
+                        {{form.media}}
+                        {{form | crispy}}
+                        {% csrf_token %}
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <button class="btn btn-primary" type="submit">Done</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

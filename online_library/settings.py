@@ -47,6 +47,7 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 # Define the public URL for media files
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

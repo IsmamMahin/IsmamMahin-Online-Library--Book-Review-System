@@ -1,0 +1,146 @@
+{% extends "book/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+    {{ book.title }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <div class="card mb-5 shadow-lg border-0">
+        <div class="card-body p-0">
+            
+            <div class="row g-0">
+                
+                <div class="col-md-4 bg-light p-4 border-end">
+                    
+                    {% if book.cover_image %}
+                    <img src="{{ book.cover_image.url }}" class="img-fluid rounded shadow-sm mb-4 object-fit-cover w-100" style="height: 350px;" alt="{{ book.title }} Cover">
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center bg-secondary-subtle text-secondary rounded shadow-sm mb-4" style="height: 350px;">
+                        <p class="text-center m-0 fs-5">No Cover Available</p>
+                    </div>
+                    {% endif %}
+
+                    <h1 class="card-title h3 fw-bold mb-1">{{ book.title }}</h1>
+                    <p class="text-muted mb-2">
+                        By <strong>{{ book.author }}</strong>
+                    </p>
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="text-warning fs-5 me-2">
+                            <i class="bi bi-star-fill"></i> 
+                        </span>
+                        <span class="fw-bold">
+                            {% if book.avg_score %}
+                                {{ book.avg_score|floatformat:1 }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </span> 
+                        <span class="text-muted small ms-1">({{ book.rating_set.count }} ratings)</span>
+                    </div>
+
+                    <p class="mb-0">
+                        <a href="{% url 'book_list' %}?category={{ book.category.name }}" class="badge bg-info text-dark text-decoration-none p-2">
+                            📂 {{ book.category.name }}
+                        </a>
+                    </p>
+
+                    <div class="mt-2">
+                        {% for tag in book.tag.all %}
+                            <a href="{% url 'book_list' %}?tag={{ tag.name }}" class="badge bg-secondary text-white text-decoration-none me-1">🏷️ {{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+
+                    <hr>
+                    <p class="small text-muted mb-0">Published: {{ book.created_at|date:"F d, Y" }}</p>
+
+                </div>
+
+
+                <div class="col-md-8 p-4">
+                    
+                    <h4 class="mb-3 border-bottom pb-2">Book Description</h4>
+                    
+                    <p class="card-text fs-6" style="white-space: pre-line;">{{ book.description | safe }}</p>
+
+                    {% if user.is_authenticated and user.username == book.author %}
+                    <div class="mt-5 border-top pt-3">
+                        <h6 class="text-muted">Author Actions</h6>
+                        <a href="{% url 'book_update' book.id %}" class="btn btn-warning btn-sm me-2">✏️ Edit Book</a>
+                        <a href="{% url 'book_delete' book.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this book?')">🗑️ Delete Book</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">💬 Comments & Ratings</h5>
+        </div>
+        <div class="card-body">
+
+            {% if user.is_authenticated %}
+            <form method="post" class="mb-4">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Your Rating (1-5 Stars):</label>
+                    <div class="d-flex">
+                        {% for i in "12345" %}
+                        <div class="form-check form-check-inline">
+                            {% with i|add:"0" as score_value %} 
+                            <input 
+                                class="form-check-input" 
+                                type="radio" 
+                                name="score" 
+                                id="score-{{ i }}" 
+                                value="{{ score_value }}" 
+                                required
+                                {% if user_rating == score_value|last|add:"0" %}checked{% endif %}
+                            >
+                            <label class="form-check-label text-warning" for="score-{{ i }}">
+                                <i class="bi bi-star-fill"></i>
+                                <span class="d-none d-sm-inline">{{ i }}</span> 
+                            </label>
+                            {% endwith %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {{ comment_form | crispy }}
+                <button type="submit" class="btn btn-primary btn-sm mt-2">➕ Submit Comment & Rating</button>
+            </form>
+            {% else %}
+            <p class="text-muted">You must be <a href="{% url 'login' %}">logged in</a> to comment or rate this book.</p>
+            {% endif %}
+
+            <hr>
+
+            {% for comment in comments %}
+            <div class="mb-3 p-3 bg-light rounded shadow-sm">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-1">{{ comment.user.username }}</h6>
+                    {% if comment.rating_score %}
+                    <span class="text-warning small" title="{{ comment.user.username }}'s Rating">
+                        <i class="bi bi-star-fill"></i> {{ comment.rating_score }} / 5
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <small class="text-muted d-block mb-2">{{ comment.created_at|date:"F d, Y H:i" }}</small>
+                <p class="mb-0">{{ comment.content }}</p>
+            </div>
+            {% empty %}
+            <p class="text-muted">No comments or ratings yet. Be the first to submit one!</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
