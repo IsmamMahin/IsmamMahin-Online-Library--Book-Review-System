@@ -17,9 +17,7 @@ from django.db.models import Avg # Used for efficient database aggregation
 def book_list(request):
     categoryQ = request.GET.get('category')
     searchQ = request.GET.get('q')
-    
-    # 🌟 FIX/IMPROVEMENT: Use annotate to calculate average rating efficiently in the DB
-    # The calculated average will be available on each Book object as 'avg_score'
+
     books = Book.objects.all().annotate(
         avg_score=Avg('rating__score')
     )
@@ -33,7 +31,6 @@ def book_list(request):
             Q(category__name__icontains = searchQ) 
         ).distinct()
     
-    # You might want to order by the calculated average rating here
     # books = books.order_by('-avg_score') 
 
     paginator = Paginator(books, 2)
@@ -42,72 +39,59 @@ def book_list(request):
     
     context = {
         'page_obj' : page_obj,
-        'categories' : Category.objects.all(),
+        'categories' : Category.objects.all().order_by('name'),
         'search_query' : searchQ,
         'category_query' : categoryQ,
     }
     return render(request, 'book/book_list.html', context)
 
-@login_required
-def book_create(request):
-    if request.method == 'POST':
-        # The book creation form needs to handle potential image upload (for cover_image)
-        form = forms.BookForm(request.POST, request.FILES) 
-        if form.is_valid():
-            book = form.save(commit=False)
-            # 🐛 CRITICAL FIX: The Book model's 'author' field is a CharField, 
-            # NOT a ForeignKey to User based on the model structure provided.
-            # If the migration error fix involved changing this back to CharField,
-            # you need to get the user's name or a related profile field.
-            # Assuming 'author' is INTENDED to store the user's username for now:
-            book.author = request.user.username 
-            # If you fixed the migration to make 'author' a ForeignKey to User, 
-            # then 'book.author = request.user' is correct. I'll stick to CharField 
-            # to match the model provided in the first prompt.
-            book.save()
-            return redirect('book_list')
-    else:
-        form = forms.BookForm()
+# @login_required
+# def book_create(request):
+#     if request.method == 'POST':
+#         # The book creation form needs to handle potential image upload (for cover_image)
+#         form = forms.BookForm(request.POST, request.FILES) 
+#         if form.is_valid():
+#             book = form.save(commit=False)            
+#             book.save()
+#             return redirect('book_list')
+#     else:
+#         form = forms.BookForm()
     
-    return render(request, 'book/book_create.html', {'form' : form})
+#     return render(request, 'book/book_create.html', {'form' : form})
 
-@login_required
-def book_update(request, id):
-    book = get_object_or_404(Book, id=id)
+# @login_required
+# def book_update(request, id):
+#     book = get_object_or_404(Book, id=id)
     
-    # 💡 IMPROVEMENT: Check if the user is the author before allowing update
-    # If the 'author' field is a CharField storing the username:
-    if book.author != request.user.username:
-        return redirect('book_details', id=book.id) # Or raise Http404/PermissionDenied
+#     # 💡 IMPROVEMENT: Check if the user is the author before allowing update
+#     # If the 'author' field is a CharField storing the username:
+#     if book.author != request.user.username:
+#         return redirect('book_details', id=book.id) # Or raise Http404/PermissionDenied
 
-    if request.method == 'POST':
-        # Handle file upload for cover_image
-        form = forms.BookForm(request.POST, request.FILES, instance=book) 
-        if form.is_valid():
-            form.save()
-            return redirect('book_details', id=book.id) # Redirect to details after update
-    else: # GET
-        # 🐛 CRITICAL FIX: Corrected form class name from PostForm to BookForm
-        form = forms.BookForm(instance=book) 
+#     if request.method == 'POST':
+#         # Handle file upload for cover_image
+#         form = forms.BookForm(request.POST, request.FILES, instance=book) 
+#         if form.is_valid():
+#             form.save()
+#             return redirect('book_details', id=book.id) # Redirect to details after update
+#     else: # GET
+#         # 🐛 CRITICAL FIX: Corrected form class name from PostForm to BookForm
+#         form = forms.BookForm(instance=book) 
     
-    return render(request, 'book/book_create.html', {'form' : form})
+#     return render(request, 'book/book_create.html', {'form' : form})
 
-@login_required
-def book_delete(request, id):
-    book = get_object_or_404(Book, id=id)
+# @login_required
+# def book_delete(request, id):
+#     book = get_object_or_404(Book, id=id)
     
-    # 💡 IMPROVEMENT: Check if the user is the author before allowing delete
-    # If the 'author' field is a CharField storing the username:
-    if book.author != request.user.username:
-        return redirect('book_details', id=book.id) # Or raise Http404/PermissionDenied
+#     if book.author != request.user.username:
+#         return redirect('book_details', id=book.id) # Or raise Http404/PermissionDenied
 
-    book.delete()
-    return redirect('book_list')
+#     book.delete()
+#     return redirect('book_list')
 
-@login_required
 def book_details(request, id):
     # 🌟 IMPROVEMENT: Annotate the single book with its average rating 
-    # to avoid the overhead of calling the @property (though it's efficient now)
     book = get_object_or_404(
         Book.objects.annotate(avg_score=Avg('rating__score')), 
         id=id
@@ -115,6 +99,11 @@ def book_details(request, id):
     
     # comment and rating form handle
     if request.method == 'POST':
+        # 🔒 SECURITY: Check if user is logged in for POST requests
+        if not request.user.is_authenticated:
+            # If an anonymous user tries to submit, redirect them to login
+            return redirect('login') 
+            
         form = forms.CommentForm(request.POST)
         score = request.POST.get('score')
         
@@ -124,13 +113,12 @@ def book_details(request, id):
                 score = int(score)
                 # 1. RATING LOGIC: Update or create the rating
                 Rating.objects.update_or_create(
-                    user=request.user,
+                    user=request.user, # request.user is safe here because of the 'if not request.user.is_authenticated' check above
                     book=book,
                     defaults={'score': score}
                 )
             except ValueError:
-                # Handle case where score is not a valid integer
-                pass # You may want to add error messages/messages.error here
+                pass 
         
         # 2. COMMENT LOGIC: Save the comment if content is provided
         if form.is_valid():
@@ -146,12 +134,14 @@ def book_details(request, id):
         # GET request: initialize empty comment form
         form = forms.CommentForm()
     
-    # 💡 IMPROVEMENT: Use select_related/prefetch_related to optimize queries
-    # Prefetch the user for comments and ratings for the rating_score property
+    # 💡 FIX/IMPROVEMENT: Safely get the user's existing rating for the template
+    user_rating = None
+    if request.user.is_authenticated:
+        # This only runs if request.user is a real User object, avoiding TypeError
+        user_rating = Rating.objects.filter(user=request.user, book=book).first()
+
+    # Prefetch the user for comments (visible to everyone)
     comments = book.comment_set.all().select_related('user').order_by('-created_at')
-    
-    # Get the user's existing rating, if any, for the template
-    user_rating = Rating.objects.filter(user=request.user, book=book).first()
     
     context = {
         'book' : book,
@@ -200,7 +190,7 @@ def profile_view(request):
             form = forms.UpdateProfileForm(request.POST, request.FILES, instance=request.user) 
             if form.is_valid():
                 form.save()
-                return redirect('/profile?section=update')
+                return redirect('book_list')
         else:
             form = forms.UpdateProfileForm(instance=request.user)
     

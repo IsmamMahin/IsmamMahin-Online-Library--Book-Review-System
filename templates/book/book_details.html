@@ -17,7 +17,7 @@
                 <div class="col-md-4 bg-light p-4 border-end">
                     
                     {% if book.cover_image %}
-                    <img src="{{ book.cover_image.url }}" class="img-fluid rounded shadow-sm mb-4 object-fit-cover w-100" style="height: 350px;" alt="{{ book.title }} Cover">
+                    <img src="{{ book.cover_image.url }}" class="img-fluid rounded shadow-sm mb-4 object-fit-cover w-100" style="height: 480px;" alt="{{ book.title }} Cover">
                     {% else %}
                     <div class="d-flex align-items-center justify-content-center bg-secondary-subtle text-secondary rounded shadow-sm mb-4" style="height: 350px;">
                         <p class="text-center m-0 fs-5">No Cover Available</p>
@@ -56,7 +56,7 @@
                     </div>
 
                     <hr>
-                    <p class="small text-muted mb-0">Published: {{ book.created_at|date:"F d, Y" }}</p>
+                    <p class="small text-muted mb-0">Last Updated at: {{ book.created_at|date:"F d, Y" }}</p>
 
                 </div>
 

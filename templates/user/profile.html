@@ -1,4 +1,4 @@
-{% extends "blog/base.html" %}
+{% extends "book/base.html" %}
 {% load crispy_forms_tags %}
 
 {% block title %}User Profile{% endblock %}
@@ -10,7 +10,7 @@
         <div class="col-md-3 mb-3">
             <div class="list-group">
                 <a href="{% url 'profile' %}?section=update" class="list-group-item list-group-item-action {% if section == 'update' %}active{% endif %}">👤 Update Profile</a>
-                <a href="{% url 'profile' %}?section=books" class="list-group-item list-group-item-action {% if section == 'books' %}active{% endif %}">📝 My Books</a>
+                {% comment %} <a href="{% url 'profile' %}?section=books" class="list-group-item list-group-item-action {% if section == 'books' %}active{% endif %}">🕮 My Books</a> {% endcomment %}
                 <form method="post" action="{% url 'logout' %}" class="list-group-item p-0">
                     {% csrf_token %}
                     <button class="btn btn-link w-100 text-start text-danger">🚪 Logout</button>
@@ -30,15 +30,15 @@
                     {{ form|crispy }}
                     <button type="submit" class="btn btn-primary mt-2">Update</button>
                 </form>
-            {% elif section == 'books' %}
+            {% comment %} {% elif section == 'books' %}
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>📰 My Books</h4>
+                <h4>🕮 My Books</h4>
                 <a href="{% url 'book_create' %}" class="btn btn-success">
-                    ✍️ Write Blog
+                    🕮 Add Book
                 </a>
-            </div>
+            </div> {% endcomment %}
             <hr>
-            {% for book in books %}
+            {% comment %} {% for book in books %}
                 <div class="card mb-3">
                     <div class="card-body">
                         <h5 class="card-title">{{ book.title }}</h5>
@@ -51,7 +51,7 @@
                 </div>
             {% empty %}
                 <p>You haven't entered any books yet.</p>
-            {% endfor %}
+            {% endfor %} {% endcomment %}
             {% endif %}
         </div>
     </div>
