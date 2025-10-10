@@ -33,7 +33,7 @@ def book_list(request):
     
     # books = books.order_by('-avg_score') 
 
-    paginator = Paginator(books, 4)
+    paginator = Paginator(books, 6)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
