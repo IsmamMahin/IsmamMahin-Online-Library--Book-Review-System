@@ -33,7 +33,7 @@ def book_list(request):
     
     # books = books.order_by('-avg_score') 
 
-    paginator = Paginator(books, 2)
+    paginator = Paginator(books, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
@@ -41,7 +41,7 @@ def book_list(request):
         'page_obj' : page_obj,
         'categories' : Category.objects.all().order_by('name'),
         'search_query' : searchQ,
-        'category_query' : categoryQ,
+        'categoryQ' : categoryQ,
     }
     return render(request, 'book/book_list.html', context)
 

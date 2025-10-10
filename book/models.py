@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models import Avg # This import is correctly included
+from ckeditor.fields import RichTextField
+from django.db.models import Avg  # This import is correctly included
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -14,10 +15,10 @@ class Category(models.Model):
 
 class Book(models.Model):
     title = models.CharField(max_length=100)
-    description = models.TextField()
+    author = models.CharField(max_length=100)
+    description = RichTextField()
     cover_image = models.ImageField(upload_to="book_covers/", blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    author = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # 🐛 FIX: Switched from inefficient Python calculation to efficient Django ORM aggregation (Avg)
